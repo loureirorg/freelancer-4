@@ -112,17 +112,39 @@ end
 File.open("companies.yaml", "w") { |f| f.write companies.to_yaml }
 puts "Companies: End"
 
+##### merge companies with multiple products
+##### remove this block to rollback to older behaviour
+merged = {}
+companies.each do |company|
+  next if company.nil?
+
+  key = Digest::MD5.hexdigest(company[:company_name])
+  if merged.has_key?(key)
+    merged[key][:listing_url] << company[:listing_url]
+    merged[key][:subtitle] << company[:subtitle]
+    company[:subcategory].each do |s|
+      merged[key][:subcategory] << s unless merged[key][:subcategory].include?(s)
+    end
+  else
+    merged[key] = company
+    merged[key][:listing_url] = [company[:listing_url]]
+    merged[key][:subtitle] = [company[:subtitle]]
+  end
+end
+companies = merged
+#####
+
 puts "CSV: Begin"
 csv = []
 sub_names = subcategories.keys.sort
 csv << (["Listing URL", "Company Name", "Subtitle", "Full Name", "First Name", "Last Name", "Phone", "Email", "Categories"] + sub_names).to_csv # header
-companies.each do |company|
+companies.each do |k, company|
   next if company.nil?
   sub_values = []
   sub_names.each do |name|
     sub_values << (company[:subcategory].include?(name) ? "1" : "")
   end
-  csv << ([company[:listing_url], company[:company_name], company[:subtitle], company[:full_name], company[:first_name], company[:last_name], '"' + company[:phone] + '"', company[:email], company[:subcategory].join(", ")] + sub_values).to_csv # header
+  csv << ([company[:listing_url].join(', '), company[:company_name], company[:subtitle].join(', '), company[:full_name], company[:first_name], company[:last_name], '"' + company[:phone] + '"', company[:email], company[:subcategory].join(", ")] + sub_values).to_csv # header
 end
 File.open("list.csv", "w") { |f| f.write csv.join }
 puts "CSV: End"
