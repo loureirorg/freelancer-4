@@ -10,6 +10,12 @@ require 'csv'
 # resume
 begin
   itens = YAML::load_file("itens.yaml")
+  puts "******************************************"
+  puts "**************** RESUMING ****************"
+  puts "******************************************"
+  puts "* If you won't resume, but get new data, *"
+  puts "* remove itens.yaml and companies.yaml   *"
+  puts "******************************************"
 rescue Exception => e
   itens = nil
 end
